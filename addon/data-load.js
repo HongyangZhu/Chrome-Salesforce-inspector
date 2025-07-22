@@ -176,6 +176,7 @@ function renderCell(rt, cell, td) {
         }
         aShow.href = "inspect.html?" + args;
         aShow.textContent = "Show all data";
+        aShow.target = "_blank";
         pop.appendChild(aShow);
       }
       // If the recordId ends with 0000000000AAA it is a dummy ID such as the ID for the master record type 012000000000000AAA
