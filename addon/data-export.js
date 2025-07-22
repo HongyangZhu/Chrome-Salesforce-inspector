@@ -854,12 +854,15 @@ class App extends React.Component {
     this.onAddToHistory = this.onAddToHistory.bind(this);
     this.onRemoveFromHistory = this.onRemoveFromHistory.bind(this);
     this.onClearSavedHistory = this.onClearSavedHistory.bind(this);
+    this.sqlFormatter = this.sqlFormatter.bind(this);
+    this.sqlClear = this.sqlClear.bind(this);
     this.onToggleHelp = this.onToggleHelp.bind(this);
     this.onToggleExpand = this.onToggleExpand.bind(this);
     this.onExport = this.onExport.bind(this);
     this.onCopyAsExcel = this.onCopyAsExcel.bind(this);
     this.onCopyAsCsv = this.onCopyAsCsv.bind(this);
     this.onCopyAsJson = this.onCopyAsJson.bind(this);
+    this.onTranspose = this.onTranspose.bind(this);
     this.onResultsFilterInput = this.onResultsFilterInput.bind(this);
     this.onStopExport = this.onStopExport.bind(this);
   }
@@ -910,6 +913,21 @@ class App extends React.Component {
     model.clearSavedHistory();
     model.didUpdate();
   }
+  sqlFormatter(e) {
+    e.preventDefault();
+    let queryElem = document.querySelector("#query");
+    /* global sqlFormatter */
+    queryElem.value = sqlFormatter.format(queryElem.value);
+    queryElem.style.height = "auto";
+    queryElem.style.height = queryElem.scrollHeight + "px";
+  }
+  sqlClear(e) {
+    e.preventDefault();
+    let queryElem = document.querySelector("#query");
+    queryElem.value = "";
+    queryElem.style.height = "auto";
+    queryElem.style.height = queryElem.scrollHeight + "px";
+  }
   onToggleHelp(e) {
     e.preventDefault();
     let {model} = this.props;
@@ -924,6 +942,9 @@ class App extends React.Component {
   }
   onExport() {
     let {model} = this.props;
+    let queryElem = document.querySelector("#query");
+    queryElem.style.height = "auto";
+    queryElem.style.height = queryElem.scrollHeight + "px";
     model.doExport();
     model.didUpdate();
   }
@@ -941,6 +962,30 @@ class App extends React.Component {
     let {model} = this.props;
     model.copyAsJson();
     model.didUpdate();
+  }
+
+  onTranspose() {
+    const table = document.querySelector(".scrolltable-scrolled table");
+    const rows = Array.from(table.rows);
+    const rowCount = rows.length;
+    const colCount = rows[0].cells.length;
+    const transposed = [];
+    for (let i = 0; i < colCount; i++) {
+      transposed[i] = [];
+      for (let j = 0; j < rowCount; j++) {
+        const originalCell = rows[j].cells[i];
+        const clonedCell = originalCell.cloneNode(true);
+        transposed[i][j] = clonedCell;
+      }
+    }
+    table.innerHTML = "";
+    for (let i = 0; i < transposed.length; i++) {
+      const newRow = table.insertRow();
+      for (let j = 0; j < transposed[i].length; j++) {
+        const clonedCell = transposed[i][j];
+        newRow.appendChild(clonedCell);
+      }
+    }
   }
   onResultsFilterInput(e) {
     let {model} = this.props;
@@ -1055,16 +1100,18 @@ class App extends React.Component {
           ),
           h("a", {href: "about:blank", onClick: this.onAddToHistory, title: "Add query to saved history", className: "char-btn"}, "+"),
           h("a", {href: "about:blank", onClick: this.onRemoveFromHistory, title: "Remove query from saved history", className: "char-btn"}, "X"),
-          h("a", {href: "about:blank", onClick: this.onClearSavedHistory, title: "Clear saved history", className: "char-btn"}, "XX")
+          h("a", {href: "about:blank", onClick: this.onClearSavedHistory, title: "Clear saved history", className: "char-btn"}, "XX"),
+          h("a", {href: "about:blank", onClick: this.sqlFormatter, title: "SQL Formatter ", className: "char-btn"}, "🪄"),
+          h("a", {href: "about:blank", onClick: this.sqlClear, title: "SQL Clear ", className: "char-btn"}, "🚨")
         ),
         h("a", {href: "about:blank", id: "export-help-btn", onClick: this.onToggleHelp}, "Export help"),
-        h("textarea", {id: "query", ref: "query", style: {maxHeight: (model.winInnerHeight - 200) + "px"}}),
+        h("textarea", {id: "query", ref: "query", wrap: "soft"}),
         h("div", {className: "autocomplete-box" + (model.expandAutocomplete ? " expanded" : "")},
           h("span", {className: "autocomplete-results"},
             h("span", {}, model.autocompleteResults.title),
             " ",
             model.autocompleteResults.results.map(r =>
-              h("span", {key: r.value}, h("a", {title: r.title, onClick: e => { e.preventDefault(); model.autocompleteClick(r); model.didUpdate(); }, href: "about:blank"}, r.value), " ")
+              h("span", {key: r.value}, h("a", {title: r.title, onClick: e => { e.preventDefault(); model.autocompleteClick(r); model.didUpdate(); }, href: "about:blank"}, `${r.value}_${r.title}`), " ")
             )
           ),
           h("a", {className: "char-btn", hidden: !model.autocompleteResults.sobjectName, href: model.showDescribeUrl(), title: "Show field info for the " + model.autocompleteResults.sobjectName + " object"}, "i"),
@@ -1088,6 +1135,7 @@ class App extends React.Component {
           h("button", {disabled: !model.canCopy(), onClick: this.onCopyAsCsv, title: "Copy exported data to clipboard for saving as a CSV file"}, "Copy (CSV)"),
           " ",
           h("button", {disabled: !model.canCopy(), onClick: this.onCopyAsJson, title: "Copy raw API output to clipboard"}, "Copy (JSON)"),
+          h("button", {disabled: !model.canCopy(), onClick: this.onTranspose, title: "Transpose rows and columns"}, "Transpose"),
           " ",
           h("input", {placeholder: "Filter results", value: model.resultsFilter, onInput: this.onResultsFilterInput}),
           h("span", {className: "result-status"},

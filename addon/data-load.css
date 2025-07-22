@@ -9,12 +9,13 @@
   border: 1px solid gray;
   overflow: hidden;
   padding: 0 1px;
-  background-color: white;
+  /* background-color: white; */
   white-space: pre;
   box-sizing: border-box;
 }
 .scrolltable-cell.header {
   font-weight: bold;
+  background-color: #a5e4a4;
 }
 .pop-menu {
   position: absolute;
@@ -26,4 +27,11 @@
 }
 .pop-menu a {
   display: block;
+}
+
+.scrolltable-row:nth-child(odd) {
+  background-color: #f2f2f2 !important;
+}
+.scrolltable-row:nth-child(even) {
+  background-color: #ffffff !important;
 }

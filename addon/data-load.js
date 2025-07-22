@@ -183,6 +183,7 @@ function renderCell(rt, cell, td) {
         let aView = document.createElement("a");
         aView.href = "https://" + rt.sfHost + "/" + recordId;
         aView.textContent = "View in Salesforce";
+        aView.target = "_blank";
         pop.appendChild(aView);
       }
       function closer(ev) {
@@ -316,6 +317,18 @@ export function initScrollTable(scroller) {
 
   function dataChange(newData) {
     data = newData;
+    console.log("🚀 ~ dataChange ~ data:", data);
+    const textarea = document.getElementById("query");
+
+    if (!textarea.dataset.listenerAdded) {
+      textarea.addEventListener("input", () => {
+        textarea.style.height = "auto";
+        textarea.style.height = textarea.scrollHeight + 10 + "px";
+      });
+
+      textarea.dataset.listenerAdded = "true";
+    }
+
     if (data == null || data.rowVisibilities.length == 0 || data.colVisibilities.length == 0) {
       // First render, or table was cleared
       rowHeights = [];
@@ -447,6 +460,7 @@ export function initScrollTable(scroller) {
       }
       let row = data.table[r];
       let tr = document.createElement("tr");
+      tr.className = "scrolltable-row";
       for (let c = firstColIdx; c < lastColIdx; c++) {
         if (colVisible[c] == 0) {
           continue;
